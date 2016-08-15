@@ -16,7 +16,6 @@ namespace InstaSharp.Endpoints
         /// <param name="config">An instance of the InstagramConfiguration class</param>
         public Users(InstagramConfig config) : this(config, null)
         {
-
         }
 
         /// <summary>
@@ -26,7 +25,6 @@ namespace InstaSharp.Endpoints
         /// <param name="auth">An instance of the OAuthResponse class.</param>
         public Users(InstagramConfig config, OAuthResponse auth) : base("users/", config, auth)
         {
-            
         }
 
         /// <summary>
@@ -104,20 +102,20 @@ namespace InstaSharp.Endpoints
         }
 
         /// <summary>
-        /// Get the most recent media published by the logged in user. 
+        /// Get the most recent media published by the logged in user.
         /// <para>Requires Authentication: True</para>
         /// </summary>
         /// <param name="maxId">Return media earlier than this max_id.</param>
         /// <param name="minId">Return media later than this min_id.</param>
         /// <param name="count">Count of media to return.</param>
         /// <param name="minTimestamp">Return media after this timestamp.</param>
-        /// <param name="maxTimestamp">Return media before this timestamp.</param>   
+        /// <param name="maxTimestamp">Return media before this timestamp.</param>
         /// <returns>Media Response</returns>
         public Task<MediasResponse> RecentSelf(string maxId, string minId, int? count, DateTime? minTimestamp, DateTime? maxTimestamp)
         {
             AssertIsAuthenticated();
 
-            return Recent(OAuthResponse.User.Id.ToString(), maxId, minId, count, minTimestamp, maxTimestamp);
+            return Recent(null, maxId, minId, count, minTimestamp, maxTimestamp);
         }
 
         /// <summary>
@@ -144,9 +142,15 @@ namespace InstaSharp.Endpoints
         /// <returns>Media Response</returns>
         public Task<MediasResponse> Recent(string id, string maxId, string minId, int? count, DateTime? minTimestamp, DateTime? maxTimestamp)
         {
-            var request = Request("{id}/media/recent");
+            // incase of self request without user object in the oauthresponse
+            var fragment = string.IsNullOrWhiteSpace(id) ? "self/media/recent" : "{id}/media/recent";
 
-            request.AddUrlSegment("id", id);
+            var request = Request(fragment);
+
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                request.AddUrlSegment("id", id);
+            }
 
             if (!string.IsNullOrEmpty(maxId)) request.AddParameter("max_id", maxId);
             if (!string.IsNullOrEmpty(minId)) request.AddParameter("min_id", minId);
